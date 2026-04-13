@@ -2,28 +2,42 @@ package com.example.hw3_androidstudio.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
 import com.example.hw3_androidstudio.data.repository.PeopleRepository
-import com.example.hw3_androidstudio.data.api.Retrofit
 import com.example.hw3_androidstudio.data.model.Person
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class PeopleViewModel : ViewModel() {
-
-    private val repository = PeopleRepository(Retrofit.api)
+@HiltViewModel
+class PeopleViewModel @Inject constructor(
+    private val repository: PeopleRepository
+) : ViewModel() {
 
     var state by mutableStateOf<PeopleUiState>(PeopleUiState.Loading)
         private set
 
-    var favourites by mutableStateOf<Set<Int>>(emptySet())
+    var favourites by mutableStateOf<List<Person>>(emptyList())
+        private set
+
+    fun loadFavourites() {
+        viewModelScope.launch {
+            favourites = repository.getFavourites()
+        }
+    }
+
+    var query by mutableStateOf("")
         private set
 
     private var page = 1
     private var currentQuery: String? = null
 
-    init { load() }
+    init {
+        load()
+        loadFavourites()
+    }
 
     fun load() {
         page = 1
@@ -95,14 +109,25 @@ class PeopleViewModel : ViewModel() {
         }
     }
 
-    fun toggleFav(id: Int) {
-        favourites =
-            if (id in favourites) favourites - id
-            else favourites + id
+    fun toggleFav(person: Person) {
+        viewModelScope.launch {
+
+            val isFav = favourites.any { it.id == person.id }
+
+            if (isFav) {
+                repository.removeFavourite(person)
+            } else {
+                repository.addFavourite(person)
+            }
+
+            loadFavourites()
+        }
     }
 
-    fun getFavouritePeople(): List<Person> {
-        val list = (state as? PeopleUiState.Success)?.list ?: return emptyList()
-        return list.filter { it.id in favourites }
+    fun getFavouritesList(): List<Person> = favourites
+
+    fun onQueryChange(newQuery: String) {
+        query = newQuery
+        search(newQuery)
     }
 }

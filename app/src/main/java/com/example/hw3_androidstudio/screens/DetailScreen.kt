@@ -1,42 +1,72 @@
 package com.example.hw3_androidstudio.screens
 
-import com.example.hw3_androidstudio.data.model.Person
+import com.example.hw3_androidstudio.viewmodel.DetailUiState
+import com.example.hw3_androidstudio.viewmodel.DetailViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun DetailScreen(
-    person: Person,
+    id: Int,
     onBack: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
+    val vm: DetailViewModel = hiltViewModel()
 
-        Text(
-            person.name,
-            style = MaterialTheme.typography.headlineMedium
-        )
+    LaunchedEffect(Unit) {
+        vm.load(id)
+    }
 
-        Spacer(Modifier.height(16.dp))
+    when (val state = vm.state) {
 
-        Text("Рост: ${person.height}")
-        Text("Вес: ${person.mass}")
-        Text("Цвет волос: ${person.hairColor}")
-        Text("Цвет кожи: ${person.skinColor}")
-        Text("Глаза: ${person.eyeColor}")
-        Text("Год рождения: ${person.birthYear}")
-        Text("Пол: ${person.gender}")
+        DetailUiState.Loading -> {
+            Box(Modifier.fillMaxSize(), Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
 
-        Spacer(Modifier.height(24.dp))
+        is DetailUiState.Success -> {
 
-        Button(onClick = onBack) {
-            Text("Назад")
+            val person = state.person
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
+            ) {
+
+                Text(
+                    person.name,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                Text("Рост: ${person.height}")
+                Text("Вес: ${person.mass}")
+                Text("Цвет волос: ${person.hairColor}")
+                Text("Цвет кожи: ${person.skinColor}")
+                Text("Глаза: ${person.eyeColor}")
+                Text("Год рождения: ${person.birthYear}")
+                Text("Пол: ${person.gender}")
+
+                Spacer(Modifier.height(24.dp))
+
+                Button(onClick = onBack) {
+                    Text("Назад")
+                }
+            }
+        }
+
+        DetailUiState.Error -> {
+            Box(Modifier.fillMaxSize(), Alignment.Center) {
+                Text("Ошибка загрузки")
+            }
         }
     }
 }

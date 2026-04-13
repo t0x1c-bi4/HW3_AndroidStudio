@@ -16,7 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 @Composable
 fun FavouritesScreen(
     people: List<Person>,
-    onToggle: (Int) -> Unit,
+    onToggle: (Person) -> Unit,
     onOpen: (Int) -> Unit,
     onBack: () -> Unit
 ) {
@@ -45,7 +45,7 @@ fun FavouritesScreen(
                     PersonCard(
                         person = person,
                         isFav = true,
-                        onToggle = { onToggle(person.id) },
+                        onToggle = { onToggle(person) },
                         onClick = { onOpen(person.id) }
                     )
                 }

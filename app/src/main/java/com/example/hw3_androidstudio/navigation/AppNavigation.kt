@@ -1,11 +1,10 @@
 package com.example.hw3_androidstudio.navigation
 
 import com.example.hw3_androidstudio.viewmodel.PeopleViewModel
-import com.example.hw3_androidstudio.viewmodel.PeopleUiState
 import com.example.hw3_androidstudio.screens.*
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 
@@ -13,7 +12,7 @@ import androidx.navigation.compose.NavHost
 fun AppNavigation() {
 
     val nav = rememberNavController()
-    val vm: PeopleViewModel = viewModel()
+    val vm: PeopleViewModel = hiltViewModel()
 
     NavHost(nav, startDestination = "list") {
 
@@ -21,6 +20,8 @@ fun AppNavigation() {
             ListScreen(
                 state = vm.state,
                 favourites = vm.favourites,
+                query = vm.query,
+                onQueryChange = vm::onQueryChange,
                 onSearch = vm::search,
                 onRetry = vm::load,
                 onToggle = vm::toggleFav,
@@ -31,21 +32,18 @@ fun AppNavigation() {
         }
 
         composable("detail/{id}") { back ->
+
             val id = back.arguments!!.getString("id")!!.toInt()
 
-            val person =
-                (vm.state as? PeopleUiState.Success)
-                    ?.list
-                    ?.first { it.id == id }
-
-            person?.let {
-                DetailScreen(it) { nav.popBackStack() }
-            }
+            DetailScreen(
+                id = id,
+                onBack = { nav.popBackStack() }
+            )
         }
 
         composable("favourites") {
 
-            val list = vm.getFavouritePeople()
+            val list = vm.getFavouritesList()
 
             FavouritesScreen(
                 people = list,

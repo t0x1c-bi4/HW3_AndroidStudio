@@ -1,6 +1,7 @@
 package com.example.hw3_androidstudio.screens
 
 import com.example.hw3_androidstudio.viewmodel.PeopleUiState
+import com.example.hw3_androidstudio.data.model.Person
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,25 +13,20 @@ import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 @Composable
 fun ListScreen(
     state: PeopleUiState,
-    favourites: Set<Int>,
+    favourites: List<Person>,
     onSearch: (String) -> Unit,
     onRetry: () -> Unit,
-    onToggle: (Int) -> Unit,
+    onToggle: (Person) -> Unit,
     onOpen: (Int) -> Unit,
     onOpenFavourites: () -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
     onLoadMore: () -> Unit
 ) {
-
-    var query by remember { mutableStateOf("") }
-
     Column(modifier = Modifier.fillMaxSize()) {
 
         Row(
@@ -42,10 +38,7 @@ fun ListScreen(
 
             OutlinedTextField(
                 value = query,
-                onValueChange = {
-                    query = it
-                    onSearch(it)
-                },
+                onValueChange = onQueryChange,
                 label = { Text("Поиск") },
                 singleLine = true,
                 modifier = Modifier.weight(1f)
@@ -111,8 +104,8 @@ fun ListScreen(
 
                         PersonCard(
                             person = person,
-                            isFav = person.id in favourites,
-                            onToggle = { onToggle(person.id) },
+                            isFav = favourites.any { it.id == person.id },
+                            onToggle = { onToggle(person) },
                             onClick = { onOpen(person.id) }
                         )
                     }
