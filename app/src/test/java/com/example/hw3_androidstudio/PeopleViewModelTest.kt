@@ -2,6 +2,7 @@ package com.example.hw3_androidstudio
 
 import com.example.hw3_androidstudio.data.local.FakeApi
 import com.example.hw3_androidstudio.data.local.FakeDao
+import com.example.hw3_androidstudio.data.local.FavouriteEntity
 import com.example.hw3_androidstudio.data.model.Person
 import com.example.hw3_androidstudio.data.model.PersonDto
 import com.example.hw3_androidstudio.data.repository.PeopleRepository
@@ -120,20 +121,24 @@ class PeopleViewModelTest {
         assertTrue(vm.state is PeopleUiState.Empty)
     }
 
-    // тест: обработка пустого результата
+    // тест: отсутствие дублей в кеше
     @Test
-    fun empty_result() = runTest {
-        val api = FakeApi()
+    fun cache_does_not_store_duplicates() = runTest {
         val dao = FakeDao()
+        val person = FavouriteEntity(
+            id = 1,
+            name = "Luke"
+        )
 
-        api.people = emptyList()
+        dao.insert(person)
+        dao.insert(person)
+        dao.insert(person)
 
-        val vm = PeopleViewModel(TestRepository(api, dao))
-        vm.load()
+        val cachedItems = dao.getAll()
 
-        advanceUntilIdle()
-
-        assertTrue(vm.state is PeopleUiState.Empty)
+        assertEquals(1, cachedItems.size)
+        assertEquals(1, cachedItems.first().id)
+        assertEquals("Luke", cachedItems.first().name)
     }
 
     // Нетривиальные тесты
