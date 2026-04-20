@@ -7,12 +7,12 @@ import com.example.hw3_androidstudio.data.model.Person
 import com.example.hw3_androidstudio.data.model.PersonDto
 import javax.inject.Inject
 
-class PeopleRepository @Inject constructor(
+open class PeopleRepository @Inject constructor(
     private val api: SwapiApi,
     private val dao: FavouriteDao
 ) {
 
-    suspend fun getPeople(page: Int): Pair<List<Person>, Boolean> {
+    open suspend fun getPeople(page: Int): Pair<List<Person>, Boolean> {
         val res = api.getPeople(page)
 
         return Pair(
@@ -30,10 +30,10 @@ class PeopleRepository @Inject constructor(
         )
     }
 
-    suspend fun getById(id: Int): Person =
+    open suspend fun getById(id: Int): Person =
         api.getPerson(id).toDomain()
 
-    suspend fun getFavourites(): List<Person> {
+    open suspend fun getFavourites(): List<Person> {
         return dao.getAll().map {
             Person(
                 id = it.id,
@@ -49,11 +49,11 @@ class PeopleRepository @Inject constructor(
         }
     }
 
-    suspend fun addFavourite(person: Person) {
+    open suspend fun addFavourite(person: Person) {
         dao.insert(FavouriteEntity(person.id, person.name))
     }
 
-    suspend fun removeFavourite(person: Person) {
+    open suspend fun removeFavourite(person: Person) {
         dao.delete(FavouriteEntity(person.id, person.name))
     }
 }
