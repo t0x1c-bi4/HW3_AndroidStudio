@@ -1,62 +1,77 @@
 package com.example.hw3_androidstudio.screens
 
-import com.example.hw3_androidstudio.viewmodel.PeopleUiState
-import com.example.hw3_androidstudio.data.model.Person
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.material3.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.example.hw3_androidstudio.data.model.Person
+import com.example.hw3_androidstudio.viewmodel.PeopleFilter
+import com.example.hw3_androidstudio.viewmodel.PeopleUiState
 
 @Composable
 fun ListScreen(
     state: PeopleUiState,
     favourites: List<Person>,
-    onSearch: (String) -> Unit,
     onRetry: () -> Unit,
     onToggle: (Person) -> Unit,
     onOpen: (Int) -> Unit,
-    onOpenFavourites: () -> Unit,
     query: String,
     onQueryChange: (String) -> Unit,
+    selectedFilter: PeopleFilter,
+    onFilterChange: (PeopleFilter) -> Unit,
     onLoadMore: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
 
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            label = { Text("Поиск") },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        )
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
-            OutlinedTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                label = { Text("Поиск") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
+            FilterChip(
+                selected = selectedFilter == PeopleFilter.ALL,
+                onClick = { onFilterChange(PeopleFilter.ALL) },
+                label = { Text("Все") }
             )
 
-            Spacer(Modifier.width(8.dp))
-
-            IconButton(onClick = onOpenFavourites) {
-                Icon(
-                    imageVector = Icons.Filled.Favorite,
-                    contentDescription = "Избранное"
-                )
-            }
+            FilterChip(
+                selected = selectedFilter == PeopleFilter.FAVOURITES,
+                onClick = { onFilterChange(PeopleFilter.FAVOURITES) },
+                label = { Text("Избранные") }
+            )
         }
 
-        when (state) {
+        Spacer(modifier = Modifier.height(8.dp))
 
-            // Loading
+        when (state) {
             PeopleUiState.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -64,13 +79,12 @@ fun ListScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text("Загрузка")
                     }
                 }
             }
 
-            // Empty
             PeopleUiState.Empty -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -80,15 +94,17 @@ fun ListScreen(
                 }
             }
 
-            // Error
             is PeopleUiState.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(state.msg)
-                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = state.msg,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
                         Button(onClick = onRetry) {
                             Text("Повторить")
                         }
@@ -96,12 +112,9 @@ fun ListScreen(
                 }
             }
 
-            // Success
             is PeopleUiState.Success -> {
                 LazyColumn {
-
                     items(state.list) { person ->
-
                         PersonCard(
                             person = person,
                             isFav = favourites.any { it.id == person.id },
@@ -118,7 +131,6 @@ fun ListScreen(
                                     .padding(16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-
                                 if (state.loadingMore) {
                                     CircularProgressIndicator()
                                 } else {

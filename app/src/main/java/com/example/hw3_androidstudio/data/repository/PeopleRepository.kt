@@ -5,6 +5,8 @@ import com.example.hw3_androidstudio.data.local.FavouriteDao
 import com.example.hw3_androidstudio.data.local.FavouriteEntity
 import com.example.hw3_androidstudio.data.model.Person
 import com.example.hw3_androidstudio.data.model.PersonDto
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 open class PeopleRepository @Inject constructor(
@@ -21,7 +23,7 @@ open class PeopleRepository @Inject constructor(
         )
     }
 
-    suspend fun search(query: String, page: Int): Pair<List<Person>, Boolean> {
+    open suspend fun search(query: String, page: Int): Pair<List<Person>, Boolean> {
         val res = api.searchPeople(query, page)
 
         return Pair(
@@ -49,12 +51,40 @@ open class PeopleRepository @Inject constructor(
         }
     }
 
+    open fun observeFavourites(): Flow<List<Person>> {
+        return dao.observeAll().map { list ->
+            list.map {
+                Person(
+                    id = it.id,
+                    name = it.name,
+                    height = "",
+                    mass = "",
+                    hairColor = "",
+                    skinColor = "",
+                    eyeColor = "",
+                    birthYear = "",
+                    gender = ""
+                )
+            }
+        }
+    }
+
+    open fun observeFavouriteIds(): Flow<Set<Int>> {
+        return dao.observeAll().map { list ->
+            list.map { it.id }.toSet()
+        }
+    }
+
     open suspend fun addFavourite(person: Person) {
         dao.insert(FavouriteEntity(person.id, person.name))
     }
 
     open suspend fun removeFavourite(person: Person) {
         dao.delete(FavouriteEntity(person.id, person.name))
+    }
+
+    open suspend fun isFavourite(id: Int): Boolean {
+        return dao.getAll().any { it.id == id }
     }
 }
 
